@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>A Pretty Strange Game: HW4</title>
+        <body>
+            <h1>A Pretty Strange Game - Hw#4 - Simulation/Graph</h1>
+            <!-- 
+                Describe what the experiment is doing, what
+                the independent and dependent variables are,
+                and how the data will be output
+             -->
+             <div>
+                <h3 id="visualGameCount"></h3>
+            </div>
+            <div>
+                <h3 id="totalMovesMade"></h3>
+            </div>
+
+            <script>
+                //Default values for the columns and rows of the grid:
+            var columns = 10;
+            var rows = 10;
+            var win = true;
+            var red_cell_touch_count;
+            var blue_cell_touch_count;
+            var max_cell_touches;
+            var cell_with_max_touches;
+            var red_original_square_pos;
+            var blue_original_square_pos;
+            var red_previous_square_pos;
+            var blue_previous_square_pos;
+            var new_blue_square_pos;
+            var new_red_square_pos;
+            var red_bounce_backs = 0;
+            var blue_bounce_backs = 0;
+            var total_board_moves_over_all_games = 0;
+            //INDEPENDENT VARIABLES:
+            var ceiling;
+            var floor;
+            var three_move_option_wins = 0;
+            var five_move_option_wins = 0;
+            var ten_move_option_wins = 0;
+            //DEPENDENT VARIABLE:
+            var total_moves_till_win = 0;
+            //total runs of the simulation:
+            var total_games_played = 0; //cap this at 10,000
+            //independent variable data:
+            var total_moves_per_win_when_range_is_0_to_2 = [];
+            var total_moves_per_win_when_range_is_2_to_5 = [];
+            var total_moves_per_win_when_range_is_5_to_9 = [];
+            
+
+            //cell object:
+            var cell = {
+                        count: 0
+                        };
+
+            //array for grid to hold the cell objects:
+            var grid_array = [];
+
+            //prepare game:
+            red_cell_touch_count = 0.0;
+            blue_cell_touch_count = 0.0;
+            max_cell_touches = 1000001;
+
+            //initialize the grid full of cell objects:
+            for (i = 0; i < (rows * columns); i++) {
+                    grid_array[i] = cell;
+                }
+            // console.log('cell objs in the grid = ' + grid_array.length);
+
+            //Game board position vars:
+            red_original_square_pos = ((rows * columns) - (columns));
+            blue_original_square_pos = (columns - 1);
+
+            //set up game with independent variable constraints:
+            function setNumberOfMoves(moveCeiling, moveFloor) {
+                //Randomly choose a number of steps: 0, 1, or 2:
+                var moveNum = Math.floor((Math.random() * moveCeiling) + moveFloor);
+                return moveNum;
+            }
+
+          
+            //moveRedFunction() controls the movement logic of the marker on the board:
+            function moveRedFunction() {
+                //Place the marker in bottom-left corner to begin the game:
+                // console.log('red_cell touch count = ' + red_cell_touch_count);
+                if (red_cell_touch_count < 1) {
+                    red_previous_square_pos = red_original_square_pos; //set this for the first turn
+                } else {
+                    // console.log('DEBUG: Red Cell Count > 1');
+                    red_previous_square_pos = new_red_square_pos; //before the next move starts set the previous position var to the most recent new sqaure pos value
+                }
+                // console.log('DEBUG: red_previous_sqaure_pos = ' + red_previous_square_pos);
+                // console.log('DEBUG: moveRedFunction() executed');
+                //Increment the cell object in the grid-array at the 
+                //index that correlates with the position of the marker
+                //on the table:
+                grid_array[red_previous_square_pos].count += 1;
+
+                var N = setNumberOfMoves(ceiling, floor);
+                // console.log('ceiling val = ' + ceiling);
+                // console.log('floor val =' + floor);
+                
+                //Randomly choose a direction: up, down, left, or right:
+                var D = Math.floor((Math.random() * 4) + 1);
+                switch(D) {
+                    case 1:
+                        new_red_square_pos = red_previous_square_pos-(N*10);
+                        //clear the previous positions color status ("occupancy"):
+                        grid_array[red_previous_square_pos].red_color = 0;
+                        // console.log('DEBUG: new_red_sqaure_pos = ' + new_red_square_pos);
+                        
+                        if (new_red_square_pos >= 0 && new_red_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            red_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            //don't move
+                            // console.log('DEBUG: location ' + new_red_square_pos + ' out of bounds');
+                            new_red_square_pos = red_previous_square_pos; //reset so no move on o.o.b.
+                            red_cell_touch_count += 1; //still must count non-move touches..
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                    case 2:
+                        new_red_square_pos = red_previous_square_pos+(N*10);
+                        //clear the previous positions color status ("occupancy"):
+                        grid_array[red_previous_square_pos].red_color = 0;
+                        // console.log('DEBUG: new_red_sqaure_pos = ' + new_red_square_pos);
+                        
+                        if (new_red_square_pos >= 0 && new_red_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            red_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            // don't move
+                            // console.log('DEBUG: location ' + new_red_square_pos + ' out of bounds');
+                            new_red_square_pos = red_previous_square_pos; //reset so no move on o.o.b.
+                            red_cell_touch_count += 1; //still must count non-move touches...(att);
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                    case 3:
+                        new_red_square_pos = red_previous_square_pos-(N*1);
+                        //clear the previous positions color status ("occupancy"):
+                        grid_array[red_previous_square_pos].red_color = 0;
+                        // console.log('DEBUG: new_red_sqaure_pos = ' + new_red_square_pos);
+
+                        if (new_red_square_pos >= 0 && new_red_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            red_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            // don't move
+                            // console.log('DEBUG: location ' + new_red_square_pos + ' out of bounds');
+                            new_red_square_pos = red_previous_square_pos; //reset so no move on o.o.b.
+                            red_cell_touch_count += 1; //still must count non-move touches...
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                    case 4:
+                        new_red_square_pos = red_previous_square_pos+(N*1);
+                        // console.log('DEBUG: new_red_sqaure_pos = ' + new_red_square_pos);
+
+                        if (new_red_square_pos >= 0 && new_red_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            red_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            // don't move
+                            // console.log('DEBUG: location ' + new_red_square_pos + ' out of bounds');
+                            new_red_square_pos = red_previous_square_pos; //reset so no move on o.o.b.
+                            red_cell_touch_count += 1; //still must count non-move touches...
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                }
+            }
+
+            //moveBlueFunction() controls the movement logic of the blue marker on the board:
+            function moveBlueFunction() {
+                //Place the marker in bottom-left corner to begin the game:
+                // console.log('blue_cell_touch_count = ' + blue_cell_touch_count);
+                if (blue_cell_touch_count < 1) {
+                    blue_previous_square_pos = blue_original_square_pos; //set this for the first turn
+                } else {
+                    // console.log('DEBUG: Blue Cell Count > 1');
+                    blue_previous_square_pos = new_blue_square_pos; //before the next move starts set the previous position var to the most recent new sqaure pos value
+                }
+
+                // console.log('DEBUG: blue_previous_sqaure_pos = ' + blue_previous_square_pos);
+                // console.log('DEBUG: moveBlueFunction() executed');
+
+                grid_array[blue_previous_square_pos].count += 1;
+
+                var N = setNumberOfMoves(ceiling, floor);
+                // console.log('ceiling val = ' + ceiling);
+                // console.log('floor val =' + floor);
+
+                //Randomly choose a direction: up, down, left, or right:
+                var D = Math.floor((Math.random() * 4) + 1);
+
+                switch(D) {
+                    case 1:
+                        new_blue_square_pos = blue_previous_square_pos-(N*10);
+                        // console.log('DEBUG: new_blue_sqaure_pos = ' + new_blue_square_pos);
+                        
+                        if (new_blue_square_pos >= 0 && new_blue_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            blue_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            //don't move
+                            // console.log('DEBUG: location ' + new_blue_square_pos + ' out of bounds');
+                            new_blue_square_pos = blue_previous_square_pos; //reset so no move on o.o.b.
+                            blue_cell_touch_count += 1; //still must count non-move touches..
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                    case 2:
+                        new_blue_square_pos = blue_previous_square_pos+(N*10);
+                        // console.log('DEBUG: new_blue_sqaure_pos = ' + new_blue_square_pos);
+
+                        if (new_blue_square_pos >= 0 && new_blue_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            blue_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            // don't move
+                            // console.log('DEBUG: location ' + new_blue_square_pos + ' out of bounds');
+                            new_blue_square_pos = blue_previous_square_pos; //reset so no move on o.o.b.
+                            blue_cell_touch_count += 1; //still must count non-move touches...
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                    case 3:
+                        new_blue_square_pos = blue_previous_square_pos-(N*1);
+                        // console.log('DEBUG: new_blue_sqaure_pos = ' + new_blue_square_pos);
+
+                        if (new_blue_square_pos >= 0 && new_blue_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            blue_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            // don't move
+                            // console.log('DEBUG: location ' + new_blue_square_pos + ' out of bounds');
+                            new_blue_square_pos = blue_previous_square_pos; //reset so no move on o.o.b.
+                            blue_cell_touch_count += 1; //still must count non-move touches...
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                    case 4:
+                        new_blue_square_pos = blue_previous_square_pos+(N*1);
+                        // console.log('DEBUG: new_blue_sqaure_pos = ' + new_blue_square_pos);
+
+                        if (new_blue_square_pos >= 0 && new_blue_square_pos < (rows * columns)) {
+                            //count square touch (add to million count for analytics)
+                            blue_cell_touch_count += 1;
+                            total_board_moves_over_all_games += 1;
+                        } else {
+                            // don't move
+                            // console.log('DEBUG: location ' + new_blue_square_pos + ' out of bounds');
+                            new_blue_square_pos = blue_previous_square_pos; //reset so no move on o.o.b.
+                            blue_cell_touch_count += 1; //still must count non-move touches...
+                            total_board_moves_over_all_games += 1;
+                        }
+                        break;
+                }
+            }
+
+            /*gameSimulator() calls the moveFunction() and then itself is 
+            called recursively by the setTimeout function until a conditional
+            is met at which point the interval is cleared and the sim stops:
+            */
+            //simulate the game:
+            //update the value of the ceiling variable for each type of run:
+            function gameSimulator() {
+                moveRedFunction();
+                moveBlueFunction();
+                //var gameSim = setTimeout(gameSimulator, 4);
+                //set this var (total_moves...) as a control to double check red_cell... + blue_cell total touches:
+                total_moves_till_win = (red_cell_touch_count + blue_cell_touch_count);
+                //Delay a recursive call to gameSimulator() for n secs so it can first check
+                //the condition below:
+                if ((new_red_square_pos == (columns-1)) || (new_blue_square_pos == ((rows * columns) - columns))
+                   || red_cell_touch_count > 1000000 || blue_cell_touch_count > 1000000) {
+                    //clearTimeout(gameSim);
+                    // console.log('move ceiling =' + ceiling);
+                    switch(ceiling) {
+                        case 3:
+                            total_moves_per_win_when_range_is_0_to_2.push(total_moves_till_win);
+                            break;
+                        case 6:
+                            total_moves_per_win_when_range_is_2_to_5.push(total_moves_till_win);
+                            break;
+                        case 10:
+                            total_moves_per_win_when_range_is_5_to_9.push(total_moves_till_win);
+                    }
+                    //cell_touches until a win:
+                    // console.log('total moves to win this game: ' + total_moves_till_win);
+                    // console.log('total_moves_per_win_when_range_is_0_to_2 array: ' + total_moves_per_win_when_range_is_0_to_2);
+                    // console.log('total_moves_per_win_when_range_is_2_to_5 array: ' + total_moves_per_win_when_range_is_2_to_5);
+                    // console.log('total_moves_per_win_when_range_is_5_to_9 array: ' + total_moves_per_win_when_range_is_5_to_9);
+
+                    //total games played:
+                    //keep track of the number of game iterations simulated:
+                    total_games_played += 1;
+                    // console.log('total games played = ' + total_games_played);
+                    red_cell_touch_count = 0;
+                    blue_cell_touch_count = 0;
+                    //reset the game for the next simulation:
+                    red_original_square_pos = ((rows * columns) - columns);
+                    blue_original_square_pos = (columns - 1);
+                    cell_with_max_touches = 0;
+
+                    //show the user how many games have been played:
+                    document.getElementById("visualGameCount").innerHTML = "Total Games Completed: " + total_games_played;
+                }
+                 //loop through the sims:
+                    if (total_games_played < 33333) {
+                        ceiling = 3, floor = 0;
+                    }
+                    if (total_games_played >= 33333 && total_games_played < 66666) {
+                        ceiling = 6, floor = 2;
+                    }
+                    if (total_games_played >= 66666 && total_games_played < 100000) {
+                        ceiling = 10, floor = 5;
+                    }
+                    document.getElementById("totalMovesMade").innerHTML = "Total Moves Made Across All Games: " + total_board_moves_over_all_games;
+            }
+
+            function runTest() {
+                while (total_games_played < 100000) {
+                    gameSimulator()
+                }
+            }
+
+            </script>
+            <div>
+                <button onclick="runTest()">run test</button>
+            </div>
+        </body>
+    </head>    
+</html> 
